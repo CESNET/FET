@@ -5,7 +5,6 @@
 import statistics
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 
 loop_stats_fields = [
