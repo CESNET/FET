@@ -53,10 +53,10 @@ def convert_lengths(pkt_lengths):
     """Convert lengths from PPI_PKT_LENGHTS representation.
 
     Args:
-        pkt_lengths (str): PPI_PKT_LENGTHS
+        pkt_lengths (str): PPI_PKT_LENGTHS.
 
     Returns:
-        dict: List of packet lengths
+        dict: List of packet lengths.
     """
 
     if pkt_lengths == "[]":
@@ -69,11 +69,11 @@ def convert_directions(pkt_directions):
     """Convert directions from PPI_PKT_DIRECTIONS representation.
 
     Args:
-        pkt_directions (str): PPI_PKT_DIRECTIONS
+        pkt_directions (str): PPI_PKT_DIRECTIONS.
 
     Returns:
-        forward (list): Indexes of forward packets
-        backward (list): Indexes of backward packets
+        forward (list): Indexes of forward packets.
+        backward (list): Indexes of backward packets.
     """
     if pkt_directions == "[]":
         return [], []
@@ -94,10 +94,10 @@ def flags_stats(row):
     """Calculate flags statistics.
 
     Args:
-        row (dict): Row within a dataframe
+        row (dict): Row within a dataframe.
 
     Returns:
-        dict: Dictionary with statistics
+        dict: Dictionary with statistics.
     """
     stats = {
         "fin_count": 0,
@@ -134,10 +134,10 @@ def lengths_stats(row):
     """Calculate packet lengths statistics.
 
     Args:
-        row (dict): Row within a dataframe
+        row (dict): Row within a dataframe.
 
     Returns:
-        dict: Dictionary with statistics
+        dict: Dictionary with statistics.
     """
     stats = {
         "lengths_min": 0,
@@ -183,10 +183,10 @@ def iat_stats(row):
     """Calculate inter arrival times statistics.
 
     Args:
-        row (dict): Row within a dataframe
+        row (dict): Row within a dataframe.
 
     Returns:
-        dict: Dictionary with statistics
+        dict: Dictionary with statistics.
     """
     stats = {
         "pkt_iat_min": 0,
@@ -242,10 +242,10 @@ def loop_flow_stats(row):
     """Calculate flow statistics of a single row - appliable over datafram.
 
     Args:
-        row (dict): Row within a dataframe
+        row (dict): Row within a dataframe.
 
     Returns:
-        dict: Dictionary with statistics
+        dict: Dictionary with statistics.
     """
     stats = {}
 
