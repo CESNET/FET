@@ -41,6 +41,13 @@ loop_stats_fields = [
     "bwd_pkt_iat_std",
 ]
 
+feature_cols = [
+    "duration",
+    "bytes_ratio",
+    "bytes_mean",
+    "packets_ratio",
+] + loop_stats_fields
+
 
 def convert_lengths(pkt_lengths):
     """Convert lengths from PPI_PKT_LENGHTS representation.
@@ -133,18 +140,18 @@ def lengths_stats(row):
         dict: Dictionary with statistics
     """
     stats = {
-        "lengths_min": np.nan,
-        "lengths_max": np.nan,
-        "lengths_mean": np.nan,
-        "lengths_std": np.nan,
-        "fwd_lengths_min": np.nan,
-        "fwd_lengths_max": np.nan,
-        "fwd_lengths_mean": np.nan,
-        "fwd_lengths_std": np.nan,
-        "bwd_lengths_min": np.nan,
-        "bwd_lengths_max": np.nan,
-        "bwd_lengths_mean": np.nan,
-        "bwd_lengths_std": np.nan,
+        "lengths_min": 0,
+        "lengths_max": 0,
+        "lengths_mean": 0,
+        "lengths_std": 0,
+        "fwd_lengths_min": 0,
+        "fwd_lengths_max": 0,
+        "fwd_lengths_mean": 0,
+        "fwd_lengths_std": 0,
+        "bwd_lengths_min": 0,
+        "bwd_lengths_max": 0,
+        "bwd_lengths_mean": 0,
+        "bwd_lengths_std": 0,
     }
 
     lengths = row["ppi_pkt_lengths"]
@@ -182,18 +189,18 @@ def iat_stats(row):
         dict: Dictionary with statistics
     """
     stats = {
-        "pkt_iat_min": np.nan,
-        "pkt_iat_max": np.nan,
-        "pkt_iat_mean": np.nan,
-        "pkt_iat_std": np.nan,
-        "fwd_pkt_iat_min": np.nan,
-        "fwd_pkt_iat_max": np.nan,
-        "fwd_pkt_iat_mean": np.nan,
-        "fwd_pkt_iat_std": np.nan,
-        "bwd_pkt_iat_min": np.nan,
-        "bwd_pkt_iat_max": np.nan,
-        "bwd_pkt_iat_mean": np.nan,
-        "bwd_pkt_iat_std": np.nan,
+        "pkt_iat_min": 0,
+        "pkt_iat_max": 0,
+        "pkt_iat_mean": 0,
+        "pkt_iat_std": 0,
+        "fwd_pkt_iat_min": 0,
+        "fwd_pkt_iat_max": 0,
+        "fwd_pkt_iat_mean": 0,
+        "fwd_pkt_iat_std": 0,
+        "bwd_pkt_iat_min": 0,
+        "bwd_pkt_iat_max": 0,
+        "bwd_pkt_iat_mean": 0,
+        "bwd_pkt_iat_std": 0,
     }
 
     if row["ppi_pkt_times"] == "[]":
@@ -268,10 +275,11 @@ def extract_per_flow_stats(df, inplace=False):
     df["time_last"] = pd.to_datetime(df["time_last"])
     df["duration"] = (df["time_last"] - df["time_first"]).dt.total_seconds()
 
-    df["bytes_per_s"] = df["bytes"] / df["duration"]
-    df["bytes_rev_per_s"] = df["bytes_rev"] / df["duration"]
-    df["packets_per_s"] = df["packets"] / df["duration"]
-    df["packets_rev_per_s"] = df["packets_rev"] / df["duration"]
+    # TODO: What if zero duration?
+    # df["bytes_per_s"] = df["bytes"] / df["duration"]
+    # df["bytes_rev_per_s"] = df["bytes_rev"] / df["duration"]
+    # df["packets_per_s"] = df["packets"] / df["duration"]
+    # df["packets_rev_per_s"] = df["packets_rev"] / df["duration"]
 
     df["bytes_ratio"] = df["bytes_rev"] / df["bytes"]
     df["bytes_mean"] = df["bytes"] / df["packets"]
