@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.feature_selection import VarianceThreshold
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.feature_selection import VarianceThreshold, f_classif
 
 from fet import flow
 
@@ -21,7 +22,11 @@ class Explorer:
     """
 
     def __init__(self, y=None):
-        self.y = y
+        if y:
+            self.y = y.lower()
+        else:
+            self.y = y
+
         self.feature_cols = []
 
     def fit(self, df):
@@ -37,6 +42,66 @@ class Explorer:
         self.feature_cols += flow.feature_cols
 
         self._remove_low_variance()
+
+    def feature_scores(self, score_func=None):
+        """Evaluate feature scores using scoring function.
+
+        Args:
+            score_func ([callable], optional): Scoring function. Defaults
+                to None - which uses f_classif.
+
+        Raises:
+            ValueError: Nothing to classify w/o target variable.
+
+        Returns:
+            list: Sorted list of tuples (feature, score).
+        """
+        if not self.y:
+            raise ValueError("No target variable.")
+
+        if not score_func:
+            score_func = f_classif
+
+        scores, _ = score_func(self.df[self.feature_cols], self.df[self.y])
+
+        res = []
+
+        for i, score in enumerate(scores):
+            res.append((self.feature_cols[i], score))
+
+        res = sorted(res, key=lambda x: x[1], reverse=True)
+
+        return res
+
+    def feature_importances(self, clf=None):
+        """Evaluate feature importances using classifier.
+
+        Args:
+            clf (object, optional): Instantiated classifier. Defaults
+                to None - which uses ExtraTreesClassifier.
+
+        Raises:
+            ValueError: Nothing to classify w/o target variable.
+
+        Returns:
+            list: Sorted list of tuples (feature, importance).
+        """
+        if not self.y:
+            raise ValueError("No target variable.")
+
+        if not clf:
+            clf = ExtraTreesClassifier(n_estimators=50)
+
+        clf = clf.fit(self.df[self.feature_cols], self.df[self.y])
+
+        res = []
+
+        for i, importance in enumerate(clf.feature_importances_):
+            res.append((self.feature_cols[i], importance))
+
+        res = sorted(res, key=lambda x: x[1], reverse=True)
+
+        return res
 
     def correlation_matrix(self):
         """Plot correlation matrix of feature columns."""
@@ -150,7 +215,7 @@ class Explorer:
         else:
             ncols = 3
 
-        ny = len(self.df["y"].unique())
+        ny = len(self.df[self.y].unique())
 
         nrows = math.ceil(len(cols) / ncols)
         vsize = nrows * 3 if ny == 1 else nrows * ny
