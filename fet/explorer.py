@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.feature_selection import VarianceThreshold, f_classif
+from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
 
 from fet import flow
 
@@ -42,6 +42,31 @@ class Explorer:
         self.feature_cols += flow.feature_cols
 
         self._remove_low_variance()
+
+    def kbest(self, k, score_func=None):
+        """Select k highest features according to scoring function.
+
+        Args:
+            k (int): Number of top features to select.
+            score_func ([callable], optional): Scoring function. Defaults
+                to None - which uses f_classif.
+
+        Raises:
+            ValueError: Nothing to classify w/o target variable.
+
+        Returns:
+            list: Unsorted list of k best features.
+        """
+        if not self.y:
+            raise ValueError("No target variable.")
+
+        if not score_func:
+            score_func = f_classif
+
+        sel = SelectKBest(score_func, k=k)
+        sel.fit(self.df[self.feature_cols], self.df[self.y])
+
+        return list(pd.Index(self.feature_cols)[sel.get_support()])
 
     def feature_scores(self, score_func=None):
         """Evaluate feature scores using scoring function.
@@ -222,7 +247,7 @@ class Explorer:
         hsize = 4.5 * ncols
 
         fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(hsize, vsize))
-        fig.tight_layout(w_pad=2, h_pad=3)
+        fig.tight_layout(w_pad=5, h_pad=3)
 
         if len(cols) == 1:
             func(x=cols[0], data=self.df, ax=axes, **kwargs)
