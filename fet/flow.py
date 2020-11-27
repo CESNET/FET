@@ -42,6 +42,10 @@ loop_stats_fields = [
 
 feature_cols = [
     "duration",
+    "bytes_per_s",
+    "bytes_rev_per_s",
+    "packets_per_s",
+    "packets_rev_per_s",
     "bytes_ratio",
     "bytes_mean",
     "packets_ratio",
@@ -255,7 +259,7 @@ def loop_flow_stats(row):
     return stats
 
 
-def extract_per_flow_stats(df, inplace=False):
+def extract_per_flow_stats(df, inplace=False, min_packets=2):
     """Extracts per flow statistics.
 
     Args:
@@ -270,15 +274,16 @@ def extract_per_flow_stats(df, inplace=False):
     if not inplace:
         df = df.copy()
 
+    df.drop(df[df["packets"] < min_packets].index, inplace=True)
+
     df["time_first"] = pd.to_datetime(df["time_first"])
     df["time_last"] = pd.to_datetime(df["time_last"])
     df["duration"] = (df["time_last"] - df["time_first"]).dt.total_seconds()
 
-    # TODO: What if zero duration?
-    # df["bytes_per_s"] = df["bytes"] / df["duration"]
-    # df["bytes_rev_per_s"] = df["bytes_rev"] / df["duration"]
-    # df["packets_per_s"] = df["packets"] / df["duration"]
-    # df["packets_rev_per_s"] = df["packets_rev"] / df["duration"]
+    df["bytes_per_s"] = df["bytes"] / df["duration"]
+    df["bytes_rev_per_s"] = df["bytes_rev"] / df["duration"]
+    df["packets_per_s"] = df["packets"] / df["duration"]
+    df["packets_rev_per_s"] = df["packets_rev"] / df["duration"]
 
     df["bytes_ratio"] = df["bytes_rev"] / df["bytes"]
     df["bytes_mean"] = df["bytes"] / df["packets"]
