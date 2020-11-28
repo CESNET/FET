@@ -255,6 +255,22 @@ def loop_flow_stats(row):
     return stats
 
 
+def prep_convert(df):
+    """Applies conversions of default pstats columns.
+
+    Args:
+        df (pandas.DataFrame): Dataframe with basic and pstats values.
+    """
+    df["time_first"] = pd.to_datetime(df["time_first"])
+    df["time_last"] = pd.to_datetime(df["time_last"])
+    df["duration"] = (df["time_last"] - df["time_first"]).dt.total_seconds()
+
+    df["fwd"], df["bwd"] = list(
+        zip(*df["ppi_pkt_directions"].apply(convert_directions))
+    )
+    df["ppi_pkt_lengths"] = df["ppi_pkt_lengths"].map(convert_lengths)
+
+
 def extract_per_flow_stats(df, inplace=False, min_packets=2):
     """Extracts per flow statistics.
 
@@ -272,16 +288,11 @@ def extract_per_flow_stats(df, inplace=False, min_packets=2):
 
     df.drop(df[df["packets"] < min_packets].index, inplace=True)
 
-    df["time_first"] = pd.to_datetime(df["time_first"])
-    df["time_last"] = pd.to_datetime(df["time_last"])
-    df["duration"] = (df["time_last"] - df["time_first"]).dt.total_seconds()
+    prep_convert(df)
 
     df["bytes_ratio"] = df["bytes_rev"] / df["bytes"]
     df["bytes_mean"] = df["bytes"] / df["packets"]
     df["packets_ratio"] = df["packets_rev"] / df["packets"]
-
-    df["fwd"], df["bwd"] = zip(*df["ppi_pkt_directions"].apply(convert_directions))
-    df["ppi_pkt_lengths"] = df["ppi_pkt_lengths"].map(convert_lengths)
 
     df[loop_stats_fields] = df.apply(loop_flow_stats, axis=1, result_type="expand")
 
