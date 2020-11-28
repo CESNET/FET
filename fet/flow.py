@@ -265,10 +265,13 @@ def prep_convert(df):
     df["time_last"] = pd.to_datetime(df["time_last"])
     df["duration"] = (df["time_last"] - df["time_first"]).dt.total_seconds()
 
-    df["fwd"], df["bwd"] = list(
-        zip(*df["ppi_pkt_directions"].apply(convert_directions))
-    )
     df["ppi_pkt_lengths"] = df["ppi_pkt_lengths"].map(convert_lengths)
+
+    df[["fwd", "bwd"]] = pd.DataFrame(
+        df["ppi_pkt_directions"].apply(convert_directions).tolist(),
+        index=df.index,
+        columns=["fwd", "bwd"],
+    )
 
 
 def extract_per_flow_stats(df, inplace=False, min_packets=2):
