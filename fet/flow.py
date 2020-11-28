@@ -289,6 +289,8 @@ def extract_per_flow_stats(df, inplace=False, min_packets=2):
     if not inplace:
         df = df.copy()
 
+    df.columns = df.columns.str.lower()
+
     df.drop(df[df["packets"] < min_packets].index, inplace=True)
 
     prep_convert(df)
