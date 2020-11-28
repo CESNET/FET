@@ -42,10 +42,6 @@ loop_stats_fields = [
 
 feature_cols = [
     "duration",
-    "bytes_per_s",
-    "bytes_rev_per_s",
-    "packets_per_s",
-    "packets_rev_per_s",
     "bytes_ratio",
     "bytes_mean",
     "packets_ratio",
@@ -279,11 +275,6 @@ def extract_per_flow_stats(df, inplace=False, min_packets=2):
     df["time_first"] = pd.to_datetime(df["time_first"])
     df["time_last"] = pd.to_datetime(df["time_last"])
     df["duration"] = (df["time_last"] - df["time_first"]).dt.total_seconds()
-
-    df["bytes_per_s"] = df["bytes"] / df["duration"]
-    df["bytes_rev_per_s"] = df["bytes_rev"] / df["duration"]
-    df["packets_per_s"] = df["packets"] / df["duration"]
-    df["packets_rev_per_s"] = df["packets_rev"] / df["duration"]
 
     df["bytes_ratio"] = df["bytes_rev"] / df["bytes"]
     df["bytes_mean"] = df["bytes"] / df["packets"]
