@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
+from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif
 
 from fet import flow
 
@@ -114,7 +114,7 @@ class Explorer:
         if not self.y:
             raise ValueError("No target variable.")
 
-        if not clf:
+        if clf is None:
             clf = ExtraTreesClassifier(n_estimators=50)
 
         clf = clf.fit(self.df[self.feature_cols], self.df[self.y])
