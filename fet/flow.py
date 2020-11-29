@@ -55,7 +55,7 @@ def convert_lengths(pkt_lengths):
         pkt_lengths (str): PPI_PKT_LENGTHS.
 
     Returns:
-        dict: List of packet lengths.
+        list: List of packet lengths.
     """
 
     if pkt_lengths == "[]":
@@ -71,22 +71,57 @@ def convert_directions(pkt_directions):
         pkt_directions (str): PPI_PKT_DIRECTIONS.
 
     Returns:
+        directions (list): Converted list of directions: 1, -1 values.
         forward (list): Indexes of forward packets.
         backward (list): Indexes of backward packets.
     """
     if pkt_directions == "[]":
-        return [], []
+        return [], [], []
 
+    directions = []
     forward = []
     backward = []
 
     for i, val in enumerate(pkt_directions.strip("[]").split("|")):
         if val == "1":
+            directions.append(1)
             forward.append(i)
         else:
+            directions.append(-1)
             backward.append(i)
 
-    return forward, backward
+    return directions, forward, backward
+
+
+def convert_merged_lengths(lengths, directions):
+    """Convert lengths to merged representation.
+
+    Merged representation sums lengths for consecutive packets which
+    are in the same direction.
+
+    Args:
+        lengths (list): List of all packet lengths.
+        directions (list): List of directions: 1, -1 values.
+
+    Returns:
+        list: List with merged packet lengths.
+    """
+    merged = []
+    tmp_sum = 0
+    direction = 1
+
+    for i, l in enumerate(lengths):
+        if directions[i] != direction:
+            merged.append(tmp_sum)
+            tmp_sum = 0
+
+        tmp_sum += l
+        direction = directions[i]
+
+    if tmp_sum != 0:
+        merged.append(tmp_sum)
+
+    return merged
 
 
 def flags_stats(row):
@@ -267,10 +302,10 @@ def prep_convert(df):
 
     df["ppi_pkt_lengths"] = df["ppi_pkt_lengths"].map(convert_lengths)
 
-    df[["fwd", "bwd"]] = pd.DataFrame(
+    df[["ppi_pkt_directions", "fwd", "bwd"]] = pd.DataFrame(
         df["ppi_pkt_directions"].apply(convert_directions).tolist(),
         index=df.index,
-        columns=["fwd", "bwd"],
+        columns=["ppi_pkt_directions", "fwd", "bwd"],
     )
 
 
