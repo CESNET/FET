@@ -8,12 +8,12 @@ from datetime import datetime
 import pandas as pd
 
 loop_stats_fields = [
-    "fin_count",
-    "syn_count",
-    "rst_count",
-    "psh_count",
-    "ack_count",
-    "urg_count",
+    "fin_ratio",
+    "syn_ratio",
+    "rst_ratio",
+    "psh_ratio",
+    "ack_ratio",
+    "urg_ratio",
     "lengths_min",
     "lengths_max",
     "lengths_mean",
@@ -134,32 +134,48 @@ def flags_stats(row):
         dict: Dictionary with statistics.
     """
     stats = {
-        "fin_count": 0,
-        "syn_count": 0,
-        "rst_count": 0,
-        "psh_count": 0,
-        "ack_count": 0,
-        "urg_count": 0,
+        "fin_ratio": 0,
+        "syn_ratio": 0,
+        "rst_ratio": 0,
+        "psh_ratio": 0,
+        "ack_ratio": 0,
+        "urg_ratio": 0,
     }
 
     if row["ppi_pkt_flags"] == "[]":
-        flags = []
+        return stats
     else:
         flags = [int(x) for x in row["ppi_pkt_flags"].strip("[]").split("|")]
 
+    fin_count = 0
+    syn_count = 0
+    rst_count = 0
+    psh_count = 0
+    ack_count = 0
+    urg_count = 0
+
     for f in flags:
         if f & 1 == 1:
-            stats["fin_count"] += 1
+            fin_count += 1
         if f & 2 == 2:
-            stats["syn_count"] += 1
+            syn_count += 1
         if f & 4 == 4:
-            stats["rst_count"] += 1
+            rst_count += 1
         if f & 8 == 8:
-            stats["psh_count"] += 1
+            psh_count += 1
         if f & 16 == 16:
-            stats["ack_count"] += 1
+            ack_count += 1
         if f & 32 == 32:
-            stats["urg_count"] += 1
+            urg_count += 1
+
+    total = len(flags)
+
+    stats["fin_ratio"] = fin_count / total
+    stats["syn_ratio"] = syn_count / total
+    stats["rst_ratio"] = rst_count / total
+    stats["psh_ratio"] = psh_count / total
+    stats["ack_ratio"] = ack_count / total
+    stats["urg_ratio"] = urg_count / total
 
     return stats
 
