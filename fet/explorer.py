@@ -36,6 +36,10 @@ class Explorer:
             df (pandas.DataFrame): DataFrame to explore.
         """
         self.df = df.copy()
+
+        if "ipaddr DST_IP" in self.df.columns:
+            self.df.rename(columns=lambda x: x.split()[1], inplace=True)
+
         self.df.columns = self.df.columns.str.lower()
 
         flow.extract_per_flow_stats(self.df, inplace=True)
