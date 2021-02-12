@@ -7,7 +7,33 @@ from datetime import datetime
 
 import pandas as pd
 
+basic_fields = [
+    "dst_ip",
+    "src_ip",
+    "bytes",
+    "bytes_rev",
+    "link_bit_field",
+    "time_first",
+    "time_last",
+    "dst_mac",
+    "src_mac",
+    "packets",
+    "packets_rev",
+    "dst_port",
+    "src_port",
+    "dir_bit_field",
+    "protocol",
+    "tcp_flags",
+    "tcp_flags_rev",
+]
+
 loop_stats_fields = [
+    "fin_count",
+    "syn_count",
+    "rst_count",
+    "psh_count",
+    "ack_count",
+    "urg_count",
     "fin_ratio",
     "syn_ratio",
     "rst_ratio",
@@ -38,6 +64,12 @@ loop_stats_fields = [
     "bwd_pkt_iat_max",
     "bwd_pkt_iat_mean",
     "bwd_pkt_iat_std",
+    "norm_pkt_iat_mean",
+    "norm_pkt_iat_std",
+    "norm_fwd_pkt_iat_mean",
+    "norm_fwd_pkt_iat_std",
+    "norm_bwd_pkt_iat_mean",
+    "norm_bwd_pkt_iat_std",
 ]
 
 feature_cols = [
@@ -124,6 +156,37 @@ def convert_merged_lengths(lengths, directions):
     return merged
 
 
+def convert_flags(pkt_flags):
+    """Convert flags from PPI_PKT_FLAGS representation.
+
+    Args:
+        pkt_flags (str): PPI_PKT_FLAGS.
+
+    Returns:
+        list: List of packet flags (as integers).
+    """
+
+    if pkt_flags == "[]":
+        return []
+    else:
+        return [int(x) for x in pkt_flags.strip("[]").split("|")]
+
+
+def contains_handshake(flags):
+    """Determines if TCP handshake is present.
+
+    Args:
+        flags (list): List of packet flags (as integers).
+
+    Returns:
+        bool: True (contains handshake) or False (does not).
+    """
+    if len(flags) >= 3 and flags[0] == 2 and flags[1] == 18 and flags[2] == 16:
+        return True
+
+    return False
+
+
 def flags_stats(row):
     """Calculate flags statistics.
 
@@ -134,6 +197,12 @@ def flags_stats(row):
         dict: Dictionary with statistics.
     """
     stats = {
+        "fin_count": 0,
+        "syn_count": 0,
+        "rst_count": 0,
+        "psh_count": 0,
+        "ack_count": 0,
+        "urg_count": 0,
         "fin_ratio": 0,
         "syn_ratio": 0,
         "rst_ratio": 0,
@@ -142,10 +211,7 @@ def flags_stats(row):
         "urg_ratio": 0,
     }
 
-    if row["ppi_pkt_flags"] == "[]":
-        return stats
-    else:
-        flags = [int(x) for x in row["ppi_pkt_flags"].strip("[]").split("|")]
+    flags = row["ppi_pkt_flags"]
 
     fin_count = 0
     syn_count = 0
@@ -169,6 +235,13 @@ def flags_stats(row):
             urg_count += 1
 
     total = len(flags)
+
+    stats["fin_count"] = fin_count
+    stats["syn_count"] = syn_count
+    stats["rst_count"] = rst_count
+    stats["psh_count"] = psh_count
+    stats["ack_count"] = ack_count
+    stats["urg_count"] = urg_count
 
     stats["fin_ratio"] = fin_count / total
     stats["syn_ratio"] = syn_count / total
@@ -207,6 +280,12 @@ def lengths_stats(row):
     lengths = row["ppi_pkt_lengths"]
     fwd_lengths = [lengths[i] for i in row["fwd"]]
     bwd_lengths = [lengths[i] for i in row["bwd"]]
+
+    # skip handshake
+    if contains_handshake(row["ppi_pkt_flags"]):
+        lengths = lengths[3:]
+        fwd_lengths = fwd_lengths[2:]
+        bwd_lengths = bwd_lengths[1:]
 
     if lengths:
         stats["lengths_min"] = min(lengths)
@@ -251,6 +330,12 @@ def iat_stats(row):
         "bwd_pkt_iat_max": 0,
         "bwd_pkt_iat_mean": 0,
         "bwd_pkt_iat_std": 0,
+        "norm_pkt_iat_mean": 0,
+        "norm_pkt_iat_std": 0,
+        "norm_fwd_pkt_iat_mean": 0,
+        "norm_fwd_pkt_iat_std": 0,
+        "norm_bwd_pkt_iat_mean": 0,
+        "norm_bwd_pkt_iat_std": 0,
     }
 
     if row["ppi_pkt_times"] == "[]":
@@ -263,27 +348,44 @@ def iat_stats(row):
     fwd_times = [times[i] for i in row["fwd"]]
     bwd_times = [times[i] for i in row["bwd"]]
 
+    # skip handshake
+    if contains_handshake(row["ppi_pkt_flags"]):
+        times = times[3:]
+        fwd_times = fwd_times[2:]
+        bwd_times = bwd_times[1:]
+
     packets_iat = [(b - a).total_seconds() for a, b in zip(times, times[1:])]
     forward_iat = [(b - a).total_seconds() for a, b in zip(fwd_times, fwd_times[1:])]
     backward_iat = [(b - a).total_seconds() for a, b in zip(bwd_times, bwd_times[1:])]
+
+    # normalized inter arrival times (0 = short, 1 = long)
+    norm_packets_iat = [1 if x > 1.0 else 0 for x in packets_iat]
+    norm_forward_iat = [1 if x > 1.0 else 0 for x in forward_iat]
+    norm_backward_iat = [1 if x > 1.0 else 0 for x in backward_iat]
 
     if packets_iat:
         stats["pkt_iat_min"] = min(packets_iat)
         stats["pkt_iat_max"] = max(packets_iat)
         stats["pkt_iat_mean"] = statistics.mean(packets_iat)
         stats["pkt_iat_std"] = statistics.pstdev(packets_iat)
+        stats["norm_pkt_iat_mean"] = statistics.mean(norm_packets_iat)
+        stats["norm_pkt_iat_std"] = statistics.pstdev(norm_packets_iat)
 
     if forward_iat:
         stats["fwd_pkt_iat_min"] = min(forward_iat)
         stats["fwd_pkt_iat_max"] = max(forward_iat)
         stats["fwd_pkt_iat_mean"] = statistics.mean(forward_iat)
         stats["fwd_pkt_iat_std"] = statistics.pstdev(forward_iat)
+        stats["norm_fwd_pkt_iat_mean"] = statistics.mean(norm_forward_iat)
+        stats["norm_fwd_pkt_iat_std"] = statistics.pstdev(norm_forward_iat)
 
     if backward_iat:
         stats["bwd_pkt_iat_min"] = min(backward_iat)
         stats["bwd_pkt_iat_max"] = max(backward_iat)
         stats["bwd_pkt_iat_mean"] = statistics.mean(backward_iat)
         stats["bwd_pkt_iat_std"] = statistics.pstdev(backward_iat)
+        stats["norm_bwd_pkt_iat_mean"] = statistics.mean(norm_backward_iat)
+        stats["norm_bwd_pkt_iat_std"] = statistics.pstdev(norm_backward_iat)
 
     return stats
 
@@ -318,10 +420,19 @@ def prep_convert(df):
 
     df["ppi_pkt_lengths"] = df["ppi_pkt_lengths"].map(convert_lengths)
 
+    df["ppi_pkt_flags"] = df["ppi_pkt_flags"].map(convert_flags)
+
     df[["ppi_pkt_directions", "fwd", "bwd"]] = pd.DataFrame(
         df["ppi_pkt_directions"].apply(convert_directions).tolist(),
         index=df.index,
         columns=["ppi_pkt_directions", "fwd", "bwd"],
+    )
+
+    df["ppi_pkt_merged_lengths"] = df.apply(
+        lambda x: convert_merged_lengths(
+            x["ppi_pkt_lengths"], x["ppi_pkt_directions"]
+        ),
+        axis=1,
     )
 
 
@@ -347,10 +458,21 @@ def extract_per_flow_stats(df, inplace=False, min_packets=2):
     prep_convert(df)
 
     df["bytes_ratio"] = df["bytes_rev"] / df["bytes"]
-    df["bytes_mean"] = df["bytes"] / df["packets"]
     df["packets_ratio"] = df["packets_rev"] / df["packets"]
 
-    df[loop_stats_fields] = df.apply(loop_flow_stats, axis=1, result_type="expand")
+    df["bytes_mean"] = df["bytes"] / df["packets"]
+    df["bytes_rev_mean"] = df["bytes_rev"] / df["packets_rev"]
+
+    df["bytes_rate"] = df["bytes"] / df["duration"]
+    df["bytes_rev_rate"] = df["bytes_rev"] / df["duration"]
+    df["bytes_total_rate"] = (df["bytes"] + df["bytes_rev"]) / df["duration"]
+
+    df["packets_rate"] = df["packets"] / df["duration"]
+    df["packets_rev_rate"] = df["packets_rev"] / df["duration"]
+    df["packets_total_rate"] = (df["packets"] + df["packets_rev"]) / df["duration"]
+
+    flow_stats = df.apply(loop_flow_stats, axis=1, result_type="expand")
+    df[flow_stats.columns] = flow_stats
 
     if not inplace:
         return df
