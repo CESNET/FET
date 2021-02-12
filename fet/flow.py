@@ -75,8 +75,15 @@ loop_stats_fields = [
 feature_cols = [
     "duration",
     "bytes_ratio",
-    "bytes_mean",
     "packets_ratio",
+    "bytes_mean",
+    "bytes_rev_mean",
+    "bytes_rate",
+    "bytes_rev_rate",
+    "bytes_total_rate",
+    "packets_rate",
+    "packets_rev_rate",
+    "packets_total_rate",
 ] + loop_stats_fields
 
 
