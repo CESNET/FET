@@ -366,9 +366,9 @@ def iat_stats(row):
     backward_iat = [(b - a).total_seconds() for a, b in zip(bwd_times, bwd_times[1:])]
 
     # normalized inter arrival times (0 = short, 1 = long)
-    norm_packets_iat = [1 if x > 1.0 else 0 for x in packets_iat]
-    norm_forward_iat = [1 if x > 1.0 else 0 for x in forward_iat]
-    norm_backward_iat = [1 if x > 1.0 else 0 for x in backward_iat]
+    norm_packets_iat = [1 if x > 5.0 else 0 for x in packets_iat]
+    norm_forward_iat = [1 if x > 5.0 else 0 for x in forward_iat]
+    norm_backward_iat = [1 if x > 5.0 else 0 for x in backward_iat]
 
     if packets_iat:
         stats["pkt_iat_min"] = min(packets_iat)
