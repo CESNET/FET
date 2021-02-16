@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from sklearn.decomposition import PCA
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif
 
@@ -29,7 +30,7 @@ class Explorer:
 
         self.feature_cols = []
 
-    def fit(self, df):
+    def fit(self, df, flow_features=True):
         """Fit DataFrame to Explorer.
 
         Args:
@@ -42,10 +43,19 @@ class Explorer:
 
         self.df.columns = self.df.columns.str.lower()
 
-        flow.extract_per_flow_stats(self.df, inplace=True)
-        self.feature_cols += flow.feature_cols
+        if flow_features:
+            flow.extract_per_flow_stats(self.df, inplace=True)
+            self.feature_cols += flow.feature_cols
 
         self._remove_low_variance()
+
+    def remove_features(self, cols):
+        """Remove features from feature vector.
+
+        Args:
+            cols (list): List of column names to remove.
+        """
+        self.feature_cols = [x for x in self.feature_cols if x not in cols]
 
     def kbest(self, k, score_func=None):
         """Select k highest features according to scoring function.
@@ -131,6 +141,52 @@ class Explorer:
         res = sorted(res, key=lambda x: x[1], reverse=True)
 
         return res
+
+    def plot_feature_scores(self, clf=None):
+        """Plot feature scores using scoring function.
+
+        Args:
+            clf (object, optional): Instantiated classifier. Defaults
+                to None - which uses ExtraTreesClassifier.
+        """
+        scores = self.feature_scores(clf)
+        n = len(scores)
+
+        plt.subplots(figsize=(16, 5))
+        plt.bar(range(n), [v for _, v in scores])
+        plt.xticks(range(n), [k for k, _ in scores], rotation=90)
+
+        plt.show()
+
+    def plot_feature_importances(self, clf=None):
+        """Plot feature importances using classifier.
+
+        Args:
+            clf (object, optional): Instantiated classifier. Defaults
+                to None - which uses ExtraTreesClassifier.
+        """
+        importances = self.feature_importances(clf)
+        n = len(importances)
+
+        plt.subplots(figsize=(16, 5))
+        plt.bar(range(n), [v for _, v in importances])
+        plt.xticks(range(n), [k for k, _ in importances], rotation=90)
+
+        plt.show()
+
+    def plot_pca(self):
+        """Plot scatterplot of the first two principal components."""
+        pca = PCA(n_components=2)
+        data = pca.fit_transform(self.df[self.feature_cols])
+        projection = pd.DataFrame(data=data, columns=("x", "y"))
+
+        if self.y:
+            projection[self.y] = self.df[self.y]
+            sns.relplot(x="x", y="y", hue=self.y, data=projection)
+        else:
+            sns.relplot(x="x", y="y", data=projection)
+
+        plt.show()
 
     def correlation_matrix(self):
         """Plot correlation matrix of feature columns."""
