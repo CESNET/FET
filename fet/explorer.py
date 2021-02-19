@@ -188,6 +188,19 @@ class Explorer:
 
         plt.show()
 
+    def correlated_features(self, threshold=0.95):
+        """Display correlated features and their correlation coefficient.
+
+        Args:
+            threshold (float, optional): Absolute correlation threshold. Defaults to 0.95.
+        """
+        corr = self.df[self.feature_cols].corr()
+        upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(np.bool))
+
+        for x in [upper[col][(upper[col].abs() > 0.95)] for col in upper]:
+            if len(x) > 0:
+                print(x, end="\n\n")
+
     def correlation_matrix(self):
         """Plot correlation matrix of feature columns."""
         _, ax = plt.subplots(figsize=(10, 8))
