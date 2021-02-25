@@ -12,7 +12,9 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif
 
-from fet import flow
+from fet import pstats
+
+modules = {"pstats": pstats}
 
 
 class Explorer:
@@ -30,11 +32,13 @@ class Explorer:
 
         self.feature_cols = []
 
-    def fit(self, df, flow_features=True):
+    def fit(self, df, remove_low_variance=True, module=None):
         """Fit DataFrame to Explorer.
 
         Args:
             df (pandas.DataFrame): DataFrame to explore.
+            remove_low_variance (bool, optional): Remove low variance features. Defaults to True.
+            module (string, optional): Features extraction module. Defaults to None.
         """
         self.df = df.copy()
 
@@ -43,11 +47,21 @@ class Explorer:
 
         self.df.columns = self.df.columns.str.lower()
 
-        if flow_features:
-            flow.extract_per_flow_stats(self.df, inplace=True)
-            self.feature_cols += flow.feature_cols
+        if not module:
+            return
 
-        self._remove_low_variance()
+        if module not in modules:
+            print(f"Supported modules: {[k for k, _ in modules.itenms()]}")
+            return
+
+        features_func = getattr(modules[module], "extract_features")
+        feature_cols = getattr(modules[module], "feature_cols")
+
+        features_func(self.df, inplace=True)
+        self.feature_cols += feature_cols
+
+        if remove_low_variance:
+            self.remove_low_variance()
 
     def remove_features(self, cols):
         """Remove features from feature vector.
@@ -343,7 +357,7 @@ class Explorer:
 
         plt.show()
 
-    def _remove_low_variance(self, threshold=0):
+    def remove_low_variance(self, threshold=0):
         """Remove low variance features.
 
         Args:
