@@ -43,7 +43,7 @@ class Explorer:
         self.df = df.copy()
 
         if "ipaddr DST_IP" in self.df.columns:
-            self.df.rename(columns=lambda x: x.split()[1], inplace=True)
+            self.df.rename(columns=lambda x: x.split()[-1], inplace=True)
 
         self.df.columns = self.df.columns.str.lower()
 
