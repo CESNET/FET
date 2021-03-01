@@ -51,7 +51,7 @@ class Explorer:
             return
 
         if module not in modules:
-            print(f"Supported modules: {[k for k, _ in modules.itenms()]}")
+            print(f"Supported modules: {[k for k, _ in modules.items()]}")
             return
 
         features_func = getattr(modules[module], "extract_features")
