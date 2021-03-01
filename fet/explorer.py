@@ -32,7 +32,7 @@ class Explorer:
 
         self.feature_cols = []
 
-    def fit(self, df, remove_low_variance=True, module=None):
+    def fit(self, df, remove_low_variance=True, module="pstats"):
         """Fit DataFrame to Explorer.
 
         Args:
@@ -46,9 +46,6 @@ class Explorer:
             self.df.rename(columns=lambda x: x.split()[-1], inplace=True)
 
         self.df.columns = self.df.columns.str.lower()
-
-        if not module:
-            return
 
         if module not in modules:
             print(f"Supported modules: {[k for k, _ in modules.items()]}")
