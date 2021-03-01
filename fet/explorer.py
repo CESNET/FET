@@ -38,7 +38,7 @@ class Explorer:
         Args:
             df (pandas.DataFrame): DataFrame to explore.
             remove_low_variance (bool, optional): Remove low variance features. Defaults to True.
-            module (string, optional): Features extraction module. Defaults to None.
+            module (string, optional): Features extraction module. Defaults to 'pstats'.
         """
         self.df = df.copy()
 
