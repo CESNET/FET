@@ -208,7 +208,7 @@ class Explorer:
         corr = self.df[self.feature_cols].corr()
         upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(np.bool))
 
-        for x in [upper[col][(upper[col].abs() > 0.95)] for col in upper]:
+        for x in [upper[col][(upper[col].abs() > threshold)] for col in upper]:
             if len(x) > 0:
                 print(x, end="\n\n")
 
