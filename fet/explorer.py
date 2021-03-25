@@ -234,83 +234,127 @@ class Explorer:
 
         plt.show()
 
-    def histplot(self, cols=None, **kwargs):
+    def histplot(self, cols=None, return_fig=False, **kwargs):
         """Plot univariate histograms.
 
         Args:
             cols (list, optional): List of columns to include.
                 Defaults to None - which includes all feature columns.
+            return_fig (bool, optional): Return matplotlib figure. Defaults to False.
             **kwargs: Other keyword arguments for seaborn.histplot.
-        """
-        self._grid(sns.histplot, cols=cols, hue=self.y, **kwargs)
 
-    def kdeplot(self, cols=None, **kwargs):
+        Returns:
+            matplotlib.figure.Figure: Returns figure if return_fig=True.
+        """
+        self._grid(
+            sns.histplot, cols=cols, return_fig=return_fig, hue=self.y, **kwargs
+        )
+
+    def kdeplot(self, cols=None, return_fig=False, **kwargs):
         """Plot univariate kernel density estimations.
 
         Args:
             cols (list, optional): List of columns to include.
                 Defaults to None - which includes all feature columns.
+            return_fig (bool, optional): Return matplotlib figure. Defaults to False.
             **kwargs: Other keyword arguments for seaborn.kdeplot.
-        """
-        self._grid(sns.kdeplot, cols=cols, hue=self.y, **kwargs)
 
-    def ecdfplot(self, cols=None, **kwargs):
+        Returns:
+            matplotlib.figure.Figure: Returns figure if return_fig=True.
+        """
+        self._grid(
+            sns.kdeplot, cols=cols, return_fig=return_fig, hue=self.y, **kwargs
+        )
+
+    def ecdfplot(self, cols=None, return_fig=False, **kwargs):
         """Plot empirical cumulative distribution functions.
 
         Args:
             cols (list, optional): List of columns to include.
                 Defaults to None - which includes all feature columns.
+            return_fig (bool, optional): Return matplotlib figure. Defaults to False.
             **kwargs: Other keyword arguments for seaborn.ecdfplot.
-        """
-        self._grid(sns.ecdfplot, cols=cols, hue=self.y, **kwargs)
 
-    def stripplot(self, cols=None, **kwargs):
+        Returns:
+            matplotlib.figure.Figure: Returns figure if return_fig=True.
+        """
+        return self._grid(
+            sns.ecdfplot, cols=cols, return_fig=return_fig, hue=self.y, **kwargs
+        )
+
+    def stripplot(self, cols=None, return_fig=False, **kwargs):
         """Plot scatter plots.
 
         Args:
             cols (list, optional): List of columns to include.
                 Defaults to None - which includes all feature columns.
+            return_fig (bool, optional): Return matplotlib figure. Defaults to False.
             **kwargs: Other keyword arguments for seaborn.stripplot.
-        """
-        self._grid(sns.stripplot, cols=cols, y=self.y, **kwargs)
 
-    def boxplot(self, cols=None, **kwargs):
+        Returns:
+            matplotlib.figure.Figure: Returns figure if return_fig=True.
+        """
+        self._grid(
+            sns.stripplot, cols=cols, return_fig=return_fig, y=self.y, **kwargs
+        )
+
+    def boxplot(self, cols=None, return_fig=False, **kwargs):
         """Plot box plots.
 
         Args:
             cols (list, optional): List of columns to include.
                 Defaults to None - which includes all feature columns.
+            return_fig (bool, optional): Return matplotlib figure. Defaults to False.
             **kwargs: Other keyword arguments for seaborn.boxplot.
-        """
-        self._grid(sns.boxplot, cols=cols, y=self.y, **kwargs)
 
-    def violinplot(self, cols=None, **kwargs):
+        Returns:
+            matplotlib.figure.Figure: Returns figure if return_fig=True.
+        """
+        self._grid(sns.boxplot, cols=cols, return_fig=return_fig, y=self.y, **kwargs)
+
+    def violinplot(self, cols=None, return_fig=False, **kwargs):
         """Plot violin plots - combination of boxplot and kde.
 
         Args:
             cols (list, optional): List of columns to include.
                 Defaults to None - which includes all feature columns.
+            return_fig (bool, optional): Return matplotlib figure. Defaults to False.
             **kwargs: Other keyword arguments for seaborn.violinplot.
-        """
-        self._grid(sns.violinplot, cols=cols, y=self.y, **kwargs)
 
-    def boxenplot(self, cols=None, **kwargs):
+        Returns:
+            matplotlib.figure.Figure: Returns figure if return_fig=True.
+        """
+        self._grid(
+            sns.violinplot, cols=cols, return_fig=return_fig, y=self.y, **kwargs
+        )
+
+    def boxenplot(self, cols=None, return_fig=False, **kwargs):
         """Plot boxen plot - enhanced box plot.
 
         Args:
             cols (list, optional): List of columns to include.
                 Defaults to None - which includes all feature columns.
+            return_fig (bool, optional): Return matplotlib figure. Defaults to False.
             **kwargs: Other keyword arguments for seaborn.boxenplot.
-        """
-        self._grid(sns.boxenplot, cols=cols, y=self.y, **kwargs)
 
-    def _grid(self, func, cols=None, **kwargs):
+        Returns:
+            matplotlib.figure.Figure: Returns figure if return_fig=True.
+        """
+        self._grid(
+            sns.boxenplot, cols=cols, return_fig=return_fig, y=self.y, **kwargs
+        )
+
+    def _grid(self, func, cols=None, return_fig=False, **kwargs):
         """Grid interface for univariate plotting.
 
         Args:
             func (callable): Callback plotting function.
             cols (list, optional): List of columns to include.
                 Defaults to None - which includes all feature columns.
+            return_fig (bool, optional): Return matplotlib figure. Defaults to False.
+
+        Returns:
+            matplotlib.figure.Figure: Returns figure if return_fig=True.
         """
         if not cols:
             cols = self.feature_cols
@@ -353,6 +397,9 @@ class Explorer:
                     i += 1
 
         plt.show()
+
+        if return_fig:
+            return fig
 
     def remove_low_variance(self, threshold=0):
         """Remove low variance features.
