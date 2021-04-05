@@ -515,7 +515,7 @@ def concatenate_ppi(fields):
     Returns:
         string: Concatenated representation.
     """
-    return "[" + "|".join([x.strip("[]") for x in fields]) + "]"
+    return "[" + "|".join([x.strip("[]") for x in fields if x != '[]']) + "]"
 
 
 def aggregate(df, window="5min"):
