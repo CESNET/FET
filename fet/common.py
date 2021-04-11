@@ -26,7 +26,7 @@ def convert_times(df, inplace=False):
 
     Returns:
         pandas.DataFrame: DataFrame is returned only if inplace=False,
-            otherwise returns None.
+        otherwise returns None.
     """
     if not inplace:
         df = df.copy()

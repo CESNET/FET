@@ -108,9 +108,11 @@ def convert_directions(pkt_directions):
         pkt_directions (str): PPI_PKT_DIRECTIONS.
 
     Returns:
-        directions (list): Converted list of directions: 1, -1 values.
-        forward (list): Indexes of forward packets.
-        backward (list): Indexes of backward packets.
+        tuple: Tuple containing:
+
+        - directions (list): Converted list of directions: 1, -1 values.
+        - forward (list): Indexes of forward packets.
+        - backward (list): Indexes of backward packets.
     """
     if pkt_directions == "[]":
         return [], [], []
@@ -433,13 +435,6 @@ def prep_convert(df):
         columns=["ppi_pkt_directions", "fwd", "bwd"],
     )
 
-    df["ppi_pkt_merged_lengths"] = df.apply(
-        lambda x: convert_merged_lengths(
-            x["ppi_pkt_lengths"], x["ppi_pkt_directions"]
-        ),
-        axis=1,
-    )
-
 
 def extract_features(df, inplace=False, min_packets=2):
     """Extracts per flow statistics.
@@ -450,15 +445,15 @@ def extract_features(df, inplace=False, min_packets=2):
             or return new DataFrame. Defaults to False.
 
     Returns:
-        pandas.DataFrame: DataFrame is returned only if inplace=False - otherwise
-            returns None.
+        pandas.DataFrame: DataFrame is returned only if inplace=False,
+        otherwise returns None.
     """
     if not inplace:
         df = df.copy()
 
     df.columns = df.columns.str.lower()
 
-    df.drop(df[df["packets"] < min_packets].index, inplace=True)
+    df.drop(df[df["packets"] + df["packets_rev"] < min_packets].index, inplace=True)
 
     prep_convert(df)
 
@@ -488,7 +483,7 @@ def swap_directions(df, swap, inplace=False):
 
     Returns:
         pandas.DataFrame: DataFrame is returned only if inplace=False,
-            otherwise returns None.
+        otherwise returns None.
     """
     if not inplace:
         df = df.copy()
@@ -515,7 +510,7 @@ def concatenate_ppi(fields):
     Returns:
         string: Concatenated representation.
     """
-    return "[" + "|".join([x.strip("[]") for x in fields if x != '[]']) + "]"
+    return "[" + "|".join([x.strip("[]") for x in fields if x != "[]"]) + "]"
 
 
 def aggregate(df, window="5min"):
